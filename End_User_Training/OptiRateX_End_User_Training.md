@@ -1,0 +1,1 @@
+![diagram](OptiRateX_End_User_Training.assets/diagram.png)
