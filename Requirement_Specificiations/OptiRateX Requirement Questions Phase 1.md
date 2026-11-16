@@ -1,6 +1,6 @@
-# <img src="../Common_Images/jira-logo-scaled.png" alt="Manuport Logistics" width="210" style="float:left; margin:0 28px 12px 0;">Requirement Questions Phase 1
+# <img src="../Common_Images/jira-logo-scaled.png" alt="Manuport Logistics" width="210" style="float:left; margin:0 28px 12px 0;">OptiRateX Requirements Phase 1
 
-Co-created with <img src="../Common_Images/kairos-logo-blue.png" alt="karios" width="100" style="margin:0 5px 5px 0;">by <img src="../Common_Images/cnext-logo.png" alt="CNEXT" width="100" style="margin:0 10px 5px 0;"> **Draft of 16th November 2026** 
+Co-created with <img src="../Common_Images/kairos-logo-blue.png" alt="karios" width="100" style="margin:0 5px 5px 0;">by <img src="../Common_Images/cnext-logo.png" alt="CNEXT" width="100" style="margin:0 10px 5px 0;"> 
 
 ### Not visible in the application
 

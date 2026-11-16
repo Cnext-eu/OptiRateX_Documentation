@@ -1,8 +1,12 @@
 # <img src="OptiRateX_End_User_Training.assets/jira-logo-scaled.png" alt="Manuport Logistics" width="210" style="float:left; margin:0 28px 12px 0;">Training Guide for OptiRateX
 
-Co-created with <img src="OptiRateX_End_User_Training.assets/kairos-logo-blue.png" alt="karios" width="100" style="margin:0 5px 5px 0;">by <img src="OptiRateX_End_User_Training.assets/cnext-logo.png" alt="CNEXT" width="100" style="margin:0 10px 5px 0;">
+Co-created with <img src="OptiRateX_End_User_Training.assets/kairos-logo-blue.png" alt="karios" width="100" style="margin:0 5px 5px 0;">by <img src="OptiRateX_End_User_Training.assets/cnext-logo.png" alt="CNEXT" width="100" style="margin:0 10px 5px 0;"> **Draft of 16th November 2026** 
 
-> **Draft status (16 Nov 2026)** 
+## Headlines
+
+* [Buy Rate Configuration](#Buy Rate Configuration)
+* [Buy Rate Ingestion & Updating](#Buy Rate Ingestion & Updating)
+* [Buy Rate Search & Comparison](#Buy Rate Search & Comparison)
 
 ## Introduction
 
@@ -22,26 +26,15 @@ After this training you are able to:
 
 Phase 1 is the pilot for Beaulieu International Group (BIG). It covers the Tender, Spot (offline) and FAK rates that MPL manages for BIG, for all transport modes, including surcharges, demurrage and detention.
 
-| In Phase 1 | Later phases | Out of scope |
-| ---------- | ------------ | ------------ |
-| Central buy rate database | BC/LQS real-time integration (Phase 2) | Sell rates and quote creation (stay in BC/LQS) |
-| Import from Excel, PDF and email | AI search and rate comparison (Phase 2) | Service Entry configuration in BC/LQS |
-| Approval workflow with human review | Agreement Links and usage dashboard (Phase 2) | Customer portal publication |
-| Basic search on origin/destination, supplier, mode | Online carrier pricing and sailing schedules (Phase 3) | Market benchmarking, CO2 data |
-| Validity tracking, expiry alerts, audit trail | International rollout (Phase 3) | |
-| Multi-currency | | |
+### Context
 
-### Context diagram
-
-
-
-
+Below the Persons and the OptiRateX they will respectively be using:
 
 ```mermaid
 
 C4Context
 
-    Person(ADMIN, "Cost Rate Administrator")
+    Person(ADMIN, "Pricing Administrator")
     Person(PROC, "Procurement")
     Person(SALES, "Sales")
     Person(OPS, "Operations")
@@ -61,20 +54,14 @@ C4Context
 
 ```
 
-
-
-
-
 ### Roles
 
 | Role in this manual | What you do in OptiRateX | Main menu items |
 | ------------------- | ------------------------ | --------------- |
-| `Cost Rate Administrator` | Define services, drivers, vocabulary and surcharge rules | Configuration |
+| `Pricing Administrator` | Define services, drivers, vocabulary and surcharge rules | Configuration |
 | `Procurement` | Import, review, publish and update buy rates | Rate Sheets, Rate state, Surcharge Updates, Import Configs, Import Audits |
 | `Sales` | Look up and compare buy rates, build a basket | Rate Lookup, Shopping Basket, Shared links |
 | `Operations` | Look up the valid buy rate for a shipment | Rate Lookup |
-
-**[To confirm]** The DEV environment shows one test user (Sophia, labelled "Pricing Analyst") who sees every menu item. Which menu items each MPL role sees in UAT/PRD is not yet defined (ORX-15, ORX-34).
 
 ### Navigation
 
@@ -106,27 +93,81 @@ The top bar has a button to collapse the sidebar and a light/dark mode switch. A
 
 ## Buy Rate Configuration
 
-**Roles:** `Cost Rate Administrator`
+**Roles:** `Pricing Administrator`
 
 Configuration is done once per service and changes rarely. It decides which columns the AI looks for during import and which filters Sales sees in Rate Lookup.
 
-#### Requirements
+### Training objectives
 
-| Issuecode | Samenvatting |
-| --------- | ------------ |
-| ORX-91 | Service types: customs, warehousing, container handling, rental, heating, fumigation |
-| ORX-45 | Service types: Terminal Handeling Charges (THCs) |
-| ORX-42 | Road transport (Poule transport) |
-| ORX-90 | [To be discussed] Definition & Composition of a Service (which reflects a Cost Rate) |
-| ORX-99 | Standard terminology for Drivers, Services, Surcharges ... |
-| ORX-68 | Initial Master Charge Codes List |
-| ORX-95 | (Bug) New drivers are not selectable in new services |
+After this chapter you are able to:
+
+- explain what a service is and how it is built up from drivers and a price;
+- find the service that fits a buy rate, such as customs, container handling or fumigation;
+- tell when a terminal handling charge (THC) is a service of its own and when it is a surcharge;
+- set up a road transport service, including poule transport;
+- use the agreed Manuport terms for drivers, services and surcharges;
+- look up a charge code in the master list and see which supplier names map to it;
+- create a new driver and add it to a service.
 
 ### Service Definition
 
 **Menu:** Configuration > Services
 
-A service definition describes one kind of buy rate. The overview shows a card per service with its number of drivers, whether spot rates are enabled and how many rates exist. Services in DEV: Container Actions, Customs Service, Ocean Freight FCL Standard, On-Carriage FCL Road, Pre-Carriage FCL Barge, Pre-Carriage FCL Road, SEA FCL, Value Added Service.
+A service definition describes one kind of buy rate. The overview shows a card per service with its number of drivers, whether spot rates are enabled and how many rates exist. 
+
+A Service in OptiRateX is decomposed as followed:
+
+```mermaid
+
+flowchart LR
+    SA["<b>Service Agreement</b><br>(aka Rate Sheet, Rate Agreement)"]
+    AL["<b>Agreement Link</b>"]
+    SUP["<b>Supplier</b>"]
+    S["<b>Service</b>"]
+    ST["<b>Service Type</b>"]
+    TAG["<b>Scope Tag</b>"]
+    RD["<b>Rate Driver</b>"]
+    CUR["Reporting Currency"]
+    CI["<b>Charge Item</b>"]
+    CC["<b>Charge Code</b>"]
+    SC["<b>Surcharge</b>"]
+    BR["<b>Base Rate</b>"]
+
+    S -. "part of" .-> SA
+    SA -. "can be linked to" .-> AL
+    SA -. "provided by" .-> SUP
+    S -. "categorized by" .-> ST
+    ST -. "has multiple" .-> TAG
+    S -. "has multiple" .-> TAG
+    S -. "has multiple" .-> RD
+    S -. "has a" .-> CUR
+    S -. "has multiple" .-> CI
+    CI -. "categorized by" .-> CC
+    SC -. "is a" .-> CI
+    SC -. "can be a percentage of" .-> BR
+    BR -. "is a" .-> CI
+
+    classDef note fill:#fff,stroke:#bbb,stroke-dasharray:3 3,font-size:12px
+    classDef data fill:#ececff,stroke:#9370db,text-align:left
+    class N1,N2 note
+    class RL,RS,T data
+
+    classDef blue fill:#1f6feb,stroke:#0b3d91,color:#fff
+    class S blue
+
+```
+
+The following Services are covered in Phase 1:
+
+- Services in DEV 
+- Container Actions
+- Customs Service 
+- Ocean Freight FCL Standard
+- On-Carriage FCL Road
+- Pre-Carriage FCL Barge
+- Pre-Carriage FCL Road
+- SEA FCL
+- Value Added Service
 
 #### Steps
 
@@ -215,16 +256,16 @@ Entries are grouped per service and driver. In DEV: SEA FCL / CONTAINER (7), SEA
 
 | Menu item | Purpose | Audience |
 | --------- | ------- | -------- |
-| Surcharge Rules | How a conditional surcharge behaves in the basket (e.g. ETS, "Off by default"). | Cost Rate Administrator |
-| Charge Codes | Master list of standard charge codes (e.g. ADM-DOC-BL Bill of Lading Fee) with their aliases; used to map supplier surcharge names during import and to line up surcharges in comparisons. | Cost Rate Administrator |
-| Categories | Groups of services (Customs, Interventions, Locals, Sea Freight, Transport). | Cost Rate Administrator |
+| Surcharge Rules | How a conditional surcharge behaves in the basket (e.g. ETS, "Off by default"). | Pricing Administrator |
+| Charge Codes | Master list of standard charge codes (e.g. ADM-DOC-BL Bill of Lading Fee) with their aliases; used to map supplier surcharge names during import and to line up surcharges in comparisons. | Pricing Administrator |
+| Categories | Groups of services (Customs, Interventions, Locals, Sea Freight, Transport). | Pricing Administrator |
 | Service Types, Solution Segments | Blueprints and transport legs (Origin inland, Main leg, On-carriage, Customs, Destination) behind the service definitions. | CNEXT / key user **[To confirm]** |
 | AI Preferences | Extra instructions for the AI per process (e.g. LocationMapping). | CNEXT / key user **[To confirm]** |
 | Charge-Code Backfill, API Tokens, Import Verification, Background Jobs | Technical administration. | CNEXT only; not part of end user training |
 
 ## Buy Rate Ingestion & Updating
 
-**Roles:** `Procurement` `Cost Rate Administrator`
+**Roles:** `Procurement` `Pricing Administrator`  
 
 ### Smart AI Import
 
@@ -232,20 +273,21 @@ Entries are grouped per service and driver. In DEV: SEA FCL / CONTAINER (7), SEA
 
 Smart AI Import reads a supplier rate sheet, extracts the rates and surcharges, and stores them as draft rates. The button is called "Import Excel" but accepts Excel, CSV, PDF and email files (ORX-83).
 
-#### Requirements
+#### Training objectives
 
-| Issuecode | Samenvatting                                                 |
-| --------- | ------------------------------------------------------------ |
-| ORX-89    | How to ingest a Driver with Knowledge  (ex: Barge types)?    |
-| ORX-3     | [Analysis] XML ingestion (TenderEasy  automated import) - Tender process |
-| ORX-1     | Sales role should be able to ingest  tariffs that will be auto approved |
-| ORX-2     | Excel ingestion (multiple supplier  templates)               |
-| ORX-12    | PDF rate sheet parsing                                       |
-| ORX-10    | Email rate parsing & surcharge (download, drag & drop)       |
-| ORX-48    | Approval workflow: automated validation + manual SME review  |
-| ORX-98    | Initiële upload Rate Sheets voor BIG                         |
-| ORX-74, ORX-78 | (Bugs) Prompts not saved / no intermediate save while prompting |
-| ORX-76, ORX-94 | (Bugs) Slow upload / large Excel files do not load      |
+After this chapter you are able to:
+
+- import a supplier rate sheet from Excel, also when suppliers use different templates;
+- import rates from a PDF rate sheet;
+- import rates and surcharges from a supplier email by dragging the file into OptiRateX;
+- help the AI understand a value that needs background knowledge, such as barge types;
+- answer the questions the AI asks during an import and correct its result with extraction rules;
+- save your import configuration, so the next sheet from the same supplier needs no new prompting;
+- split a large rate sheet or adjust the import when a file is slow or does not load;
+- explain what the automated validation checks and what you review yourself before rates are approved;
+- explain when rates imported by Sales are approved automatically;
+- describe how tender rates from TenderEasy reach OptiRateX;
+- carry out the initial upload of the BIG rate sheets.
 
 #### Steps
 
@@ -316,17 +358,17 @@ flowchart LR
 
 The list of all rates, imported and manual, with their approval status. This is where Procurement reviews draft rates and publishes them.
 
-#### Requirements
+#### Training objectives
 
-| Issuecode | Samenvatting |
-| --------- | ------------ |
-| ORX-36 | Rate types: Tender, Spot (offline), FAK |
-| ORX-48 | Approval workflow: automated validation + manual SME review |
-| ORX-41 | Multi-currency support with exchange rates |
-| ORX-67 | Support for Named Account rates |
-| ORX-58 | [Question] How will Procurement validate the updated cost rates? |
-| ORX-82, ORX-97 | (Bugs) Search bar for approving rates / Procurement search bar |
-| ORX-29 | (Bug) Structure of the central database: all rates visible in one view |
+After this chapter you are able to:
+
+- tell tender, spot and FAK rates apart in the rate list;
+- find the rates you need to review with the search bar and the filters;
+- validate updated rates after an import or a surcharge update;
+- approve and publish rates, and explain what the automated validation has already checked;
+- read a price in its own currency and explain how it is converted with exchange rates;
+- link a rate to a named account;
+- explain how the central database is organised, so you see the rates that matter to you and not all rates in one view.
 
 #### Steps
 
@@ -363,13 +405,14 @@ The list of all rates, imported and manual, with their approval status. This is 
 
 Shows the published rates and surcharges that stop being covered soon and have no published replacement yet.
 
-#### Requirements
+#### Training objectives
 
-| Issuecode | Samenvatting |
-| --------- | ------------ |
-| ORX-37 | Validity tracking and expiration alerts |
-| ORX-62 | (Bug) Rate state window should be available for all user roles |
-| ORX-61 | (Bug) Surcharges must get their own validity period upon import |
+After this chapter you are able to:
+
+- see which published rates expire soon and have no replacement yet;
+- open the Rate state screen from your own role, whether you work in Procurement, Sales or Operations;
+- check the validity period of a surcharge separately from the validity of its rate;
+- act on an upcoming expiry by requesting and importing new rates in time.
 
 #### Steps
 
@@ -394,13 +437,14 @@ Shows the published rates and surcharges that stop being covered soon and have n
 
 Read-only list of every import: Date, File, Supplier / Tender / NAC, Service, Results (e.g. "+266 created", "Warnings") and Imported By.
 
-#### Requirements
+#### Training objectives
 
-| Issuecode | Samenvatting |
-| --------- | ------------ |
-| ORX-38 | Operational Audit trail and version history |
-| ORX-11 | Source tracking: traceability of rate origin (file, email, import run) |
-| ORX-85 | (Bug) Original Source not found in history |
+After this chapter you are able to:
+
+- look up who imported or changed a rate, and when;
+- follow the versions of a rate from import to publication;
+- trace a rate back to the file, email or import run it came from;
+- open the original source document from the history of a rate.
 
 #### Steps
 
@@ -449,14 +493,15 @@ A saved import configuration is a reusable extraction profile for one supplier (
 
 Applies one surcharge change (e.g. a new BAF or fuel percentage) to all matching draft and published rates of a tender or supplier, with a preview and a report.
 
-#### Requirements
+#### Training objectives
 
-| Issuecode | Samenvatting |
-| --------- | ------------ |
-| ORX-39 | Surcharges update |
-| ORX-10 | Email rate parsing & surcharge |
-| ORX-75 | (Bug) Definition of the carrier regions in OptiRate |
-| ORX-86 | (Bug) Standardize surcharge naming and terminology |
+After this chapter you are able to:
+
+- apply a surcharge change to all matching rates of a supplier or tender in one update;
+- let the AI fill in a surcharge update from a supplier email, PDF or Excel file;
+- check the preview before you apply an update, and undo an update afterwards;
+- limit a surcharge update to the carrier region it applies to;
+- recognise a surcharge by its standard name, whatever the supplier calls it.
 
 #### Steps
 
@@ -522,17 +567,14 @@ The report shows Affected, Draft, Published, Previous impact, New impact and Imp
 
 **Roles:** `Sales` `Operations`
 
-#### Requirements
+### Training objectives
 
-| Issuecode | Samenvatting |
-| --------- | ------------ |
-| ORX-46 | Rate search optimization |
-| ORX-36 | Rate types: Tender, Spot (offline), FAK |
-| ORX-38 | Operational Audit trail and version history |
-| ORX-6 | Rate comparison across carriers and modes (Phase 2) |
-| ORX-5 | Online carrier pricing (real-time API spot rates) (Phase 3) |
-| ORX-72 | (Bug) Hide real-time spot rates in UAT |
-| ORX-88 | (Bug) SPOT for carriers other than Hapag still missing |
+After this chapter you are able to:
+
+- find the valid buy rate for a shipment by service, quote date, origin, destination and supplier;
+- tell tender, spot and FAK rates apart in the search results;
+- collect rates in a basket, with the conditional surcharges that apply, and export or share the basket;
+- open the history of a rate to see where it came from and what changed.
 
 ### Buy Rate Lookup
 
@@ -549,8 +591,6 @@ flowchart LR
     B --> C[Read results]
     C --> D[Compare<br>rates]
     C --> E[Add rate<br>to basket]
-    E --> F[Confirm conditional<br>surcharges]
-    F --> G[Export basket<br>to Excel]
 
 ```
 
@@ -558,21 +598,63 @@ flowchart LR
 2. Set the **Quote date** (default: today) and optionally a **Tender** and **Supplier**.
 3. Set the driver filters, e.g. Port of Loading, Port of destination, Container Type. Each filter accepts several values.
 4. Read the results. Each line shows the provider, the lane, base rate, surcharges and total, validity and the remaining driver values. Sort with **Sort by** (e.g. Total price, low to high).
-5. Add a rate to the basket. In **Confirm basket additions**, tick the conditional surcharges that apply to this shipment and click **Add rate**.
-6. Open **Shopping Basket** to review the rates, rename the basket, **Export to Excel** or **Share link**. A shared link stops working after 90 days (see Sales > Shared links).
+5. Compare rates or add a rate to the basket (see *Shopping Basket*).
 
 #### Forms
 
 ![Rate Lookup](OptiRateX_End_User_Training.assets/Rate_Lookup.png)
-
-![Confirm basket additions](OptiRateX_End_User_Training.assets/Basket_Confirm.png)
 
 #### Desired Outcomes
 
 - Single-view access to all applicable buy rates.
 - Sales quotes on the rate and surcharges valid on the quote date; fewer buy-side invoice disputes.
 
-**[To confirm]** The basket and shared links are not listed in the contract requirements; decide whether they are trained in Phase 1.
+### Shopping Basket
+
+**Menu:** Sales > Shopping Basket; the active basket is also shown at the top of Rate Lookup
+
+A basket collects the buy rates you picked for one enquiry, for example the pre-carriage, sea freight and customs rates of a shipment. Each rate is stored as a snapshot, so the basket keeps the price as it was when you added it.
+
+#### Steps
+
+```mermaid
+
+flowchart LR
+    A[Find rate in<br>Rate Lookup] --> B[Add rate<br>to basket]
+    B --> C[Confirm conditional<br>surcharges]
+    C --> D[Review<br>basket]
+    D --> E[Export<br>to Excel]
+    D --> F[Share<br>link]
+
+```
+
+1. In Rate Lookup, check which basket is active (e.g. "Basket #39 · 0 rates"). Switch to another basket or start a new one if needed.
+2. Add a rate to the basket from the search results.
+3. In **Confirm basket additions**, tick the conditional surcharges that apply to this shipment and click **Add rate**. Which surcharges are ticked by default is set under Configuration > Surcharge Rules.
+4. Repeat for the other services of the shipment.
+5. Open **Shopping Basket** to review the rates. Remove a rate you do not need, or use **Clear basket** to empty it.
+6. Give the basket a recognisable name with the rename button.
+7. Click **Export to Excel** to use the rates in a quote, or **Share link** to send the basket to a colleague. A shared link stops working after 90 days; delete it under Sales > Shared links to withdraw it sooner.
+
+#### Forms
+
+![Confirm basket additions](OptiRateX_End_User_Training.assets/Basket_Confirm.png)
+
+| Element | Explanation |
+| ------- | ----------- |
+| Basket selector | Shows the active basket and its number of rates; switches between saved baskets. |
+| New basket | Starts an empty basket. |
+| Created / Pricing date | When the basket was made, and the quote date its rates were priced on. |
+| Export to Excel | Downloads the rates of the basket. Not available for an empty basket. |
+| Share link | Creates a link to the basket that is valid for 90 days. |
+| Clear basket | Removes all rates from the basket. |
+
+#### Desired Outcomes
+
+- All buy rates for one enquiry are together in one place, with the surcharges that apply.
+- The buy-side input for a quote is handed over as one Excel file or link, not retyped.
+
+**[To confirm]** The basket and shared links are not listed in the contract requirements; decide whether they are trained in Phase 1. A screenshot of the Shopping Basket screen itself is still missing, and what a shared link shows to the receiver was not checked.
 
 ### Compare Buy Rates
 
@@ -600,25 +682,3 @@ Open the history of a rate to see how it was created, changed and where it came 
 
 - A disputed rate can be traced back to the supplier document in one click (ORX-11, ORX-85).
 
-## Phase 1 requirements check
-
-| Contract requirement (Phase 1) | Jira | Section in this manual | Remark |
-| ------------------------------ | ---- | ---------------------- | ------ |
-| Centralized rate database | ORX-16, ORX-29 | Buy Rate Sheets, Buy Rate Lookup | |
-| All transport modes | ORX-42 | Service Definition | Services in DEV cover sea, road and barge; no air or rail service yet. |
-| All service types | ORX-91, ORX-45 | Service Definition | No warehousing, rental or heating service in DEV yet. |
-| Surcharges, demurrage & detention with freetime | ORX-39, ORX-61 | Surcharge Updates | Free Time is a driver on SEA FCL. |
-| Multi-currency with exchange rates | ORX-41, ORX-84 | Buy Rate Sheets | Exchange rate maintenance not found in the menu. **[To confirm]** |
-| Validity tracking and expiration alerts | ORX-37, ORX-62 | Buy Rate State | Alerts are a screen, no notification seen. |
-| Audit trail and version history | ORX-38, ORX-85 | Import Audit Log, Buy Rate History | |
-| Rate types: Tender, Spot (offline), FAK | ORX-36, ORX-88 | Buy Rate Sheets | |
-| Approval workflow | ORX-48, ORX-58 | Buy Rate Sheets | Publish step to be documented. |
-| Basic rate search | ORX-46 | Buy Rate Lookup | |
-| Excel ingestion | ORX-2 | Smart AI Import | |
-| XML ingestion (TenderEasy) | ORX-3, ORX-104 | (none) | Contract: Phase 1. Jira: build in Phase 2. |
-| PDF rate sheet parsing | ORX-12 | Smart AI Import | |
-| Email rate parsing | ORX-10, ORX-101 | Smart AI Import, Surcharge Updates | File upload only; mail bridge later. |
-| Azure Entra ID SSO | ORX-66 | Navigation | |
-| User access provisioning | ORX-15, ORX-34 | Roles | Role model open. |
-
-Present in the application but not a Phase 1 contract requirement: Compare Rates, live spot rates, Shopping Basket, Shared links, Named Accounts (ORX-67), Charge Codes (ORX-68), dangerous goods (IMO).
