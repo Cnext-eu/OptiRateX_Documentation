@@ -14,7 +14,9 @@ Co-created with <img src="OptiRateX_End_User_Training.assets/kairos-logo-blue.pn
 
 ## Introduction
 
-Phase 1
+Phase 1 BIG 
+
+Context diagram
 
 ## Buy Rate Configuration
 
@@ -61,11 +63,11 @@ flowchart LR
 
 #### Forms
 
-![Smart AI 1](OptiRateX_End_User_Training.assets/Smart AI 1.png)
+![Smart AI 1](OptiRateX_End_User_Training.assets/Smart_AI_1.png)
 
-![Smart AI 2](OptiRateX_End_User_Training.assets/Smart AI 2.png)
+![Smart AI 2](OptiRateX_End_User_Training.assets/Smart_AI_2.png)
 
-![Smart AI 3](OptiRateX_End_User_Training.assets/Smart AI 3.png)
+![Smart AI 3](OptiRateX_End_User_Training.assets/Smart_AI_3.png)
 
 #### Desired Outcomes
 
